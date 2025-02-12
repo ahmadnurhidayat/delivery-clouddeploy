@@ -1,0 +1,23 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA', '.']
+
+  # Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA']
+
+  # Submit deployment to Cloud Deploy
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'deploy'
+      - 'releases'
+      - 'create'
+      - 'release-$SHORT_SHA'
+      - '--delivery-pipeline=delivery-prod-pipeline'
+      - '--region=us-central1'
+      - '--images=my-app=us-central1-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA'
+
+substitutions:
+  _SERVICE_NAME: "hello-world"
