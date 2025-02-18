@@ -1,11 +1,13 @@
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA', '.']
+    id: Build Docker Image
+    
+    args: ['build', '-t', '<region>-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA', '.']
 
   # Push the image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA']
+    args: ['push', '<region>-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA']
 
   # Submit deployment to Cloud Deploy
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -16,8 +18,14 @@ steps:
       - 'create'
       - 'release-$SHORT_SHA'
       - '--delivery-pipeline=delivery-prod-pipeline'
-      - '--region=us-central1'
-      - '--images=my-app=us-central1-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA'
+      - '--region=<region>'
+      - '--images=my-app=<region>-docker.pkg.dev/$PROJECT_ID/training-repo/py-helloworld:$SHORT_SHA'
+    secretEnv: ['REPO_URL']
+
+availableSecrets:
+  secretManager:
+    - versionName: "projects/$PROJECT_ID/secrets/REPO_URL/versions/latest"
+      env: "REPO_URL"
 
 substitutions:
   _SERVICE_NAME: "hello-world"
